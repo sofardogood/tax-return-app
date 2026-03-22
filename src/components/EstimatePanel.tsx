@@ -59,8 +59,8 @@ export function EstimatePanel({ params, setParams, result }: Props) {
           <Grid>
             <SelectField
               label="障害者控除"
-              value={(params as unknown as Record<string, unknown>).disabilityType as string || "none"}
-              onChange={v => set("disabilityType" as keyof EstimateParams, v)}
+              value={params.disabilityLevel || "none"}
+              onChange={v => setParams({ ...params, disabilityLevel: v as EstimateParams["disabilityLevel"] })}
               options={[
                 { label: "なし", value: "none" },
                 { label: "一般障害者", value: "general" },
@@ -70,8 +70,8 @@ export function EstimatePanel({ params, setParams, result }: Props) {
             />
             <SelectField
               label="寡婦/ひとり親控除"
-              value={(params as unknown as Record<string, unknown>).widowType as string || "none"}
-              onChange={v => set("widowType" as keyof EstimateParams, v)}
+              value={params.widowType || "none"}
+              onChange={v => setParams({ ...params, widowType: v as EstimateParams["widowType"] })}
               options={[
                 { label: "なし", value: "none" },
                 { label: "寡婦", value: "widow" },
@@ -80,8 +80,8 @@ export function EstimatePanel({ params, setParams, result }: Props) {
             />
             <CheckboxField
               label="勤労学生控除"
-              checked={!!(params as unknown as Record<string, unknown>).workingStudent}
-              onChange={v => set("workingStudent" as keyof EstimateParams, v ? 1 : 0)}
+              checked={!!params.isStudent}
+              onChange={v => setParams({ ...params, isStudent: !!v })}
             />
           </Grid>
         </Section>
@@ -90,20 +90,20 @@ export function EstimatePanel({ params, setParams, result }: Props) {
           <Grid>
             <Field
               label="住宅ローン残高"
-              value={(params as unknown as Record<string, unknown>).housingLoanBalance as number || 0}
-              onChange={v => set("housingLoanBalance" as keyof EstimateParams, v)}
+              value={params.housingLoanBalance || 0}
+              onChange={v => set("housingLoanBalance", v)}
             />
             <CheckboxField
               label="初年度"
-              checked={!!(params as unknown as Record<string, unknown>).housingLoanFirstYear}
-              onChange={v => set("housingLoanFirstYear" as keyof EstimateParams, v ? 1 : 0)}
+              checked={!!params.housingLoanFirstYear}
+              onChange={v => setParams({ ...params, housingLoanFirstYear: !!v })}
             />
             <div>
               <label className="block text-xs font-medium text-slate-500 mb-1">取得日</label>
               <input
                 type="date"
-                value={(params as unknown as Record<string, unknown>).housingLoanDate as string || ""}
-                onChange={e => set("housingLoanDate" as keyof EstimateParams, e.target.value)}
+                value={params.housingLoanAcquisitionDate || ""}
+                onChange={e => setParams({ ...params, housingLoanAcquisitionDate: e.target.value })}
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-300 outline-none"
               />
             </div>
@@ -114,40 +114,40 @@ export function EstimatePanel({ params, setParams, result }: Props) {
           <Grid>
             <Field
               label="寄附金控除（ふるさと納税以外）"
-              value={(params as unknown as Record<string, unknown>).otherDonations as number || 0}
-              onChange={v => set("otherDonations" as keyof EstimateParams, v)}
+              value={params.otherDonations || 0}
+              onChange={v => set("otherDonations", v)}
             />
             <Field
               label="雑損控除（損失額）"
-              value={(params as unknown as Record<string, unknown>).casualtyLoss as number || 0}
-              onChange={v => set("casualtyLoss" as keyof EstimateParams, v)}
+              value={params.casualtyLoss || 0}
+              onChange={v => set("casualtyLoss", v)}
             />
             <Field
               label="雑損控除（保険金）"
-              value={(params as unknown as Record<string, unknown>).casualtyInsurance as number || 0}
-              onChange={v => set("casualtyInsurance" as keyof EstimateParams, v)}
+              value={params.casualtyInsurance || 0}
+              onChange={v => set("casualtyInsurance", v)}
             />
             <Field
               label="セルフメディケーション"
-              value={(params as unknown as Record<string, unknown>).selfMedication as number || 0}
-              onChange={v => set("selfMedication" as keyof EstimateParams, v)}
+              value={params.selfMedicationTotal || 0}
+              onChange={v => set("selfMedicationTotal", v)}
               help="12,000円超が対象"
             />
             <Field
               label="予定納税額"
-              value={(params as unknown as Record<string, unknown>).prepaidTax as number || 0}
-              onChange={v => set("prepaidTax" as keyof EstimateParams, v)}
+              value={params.advanceTaxPayment || 0}
+              onChange={v => set("advanceTaxPayment", v)}
             />
             <div>
               <label className="block text-xs font-medium text-slate-500 mb-1">
-                家事按分割合: {(params as unknown as Record<string, unknown>).homeOfficeRatio as number || 0}%
+                家事按分割合: {params.homeOfficeRatio || 0}%
               </label>
               <input
                 type="range"
                 min={0}
                 max={100}
-                value={(params as unknown as Record<string, unknown>).homeOfficeRatio as number || 0}
-                onChange={e => set("homeOfficeRatio" as keyof EstimateParams, Number(e.target.value))}
+                value={params.homeOfficeRatio || 0}
+                onChange={e => set("homeOfficeRatio", Number(e.target.value))}
                 className="w-full"
               />
             </div>
@@ -198,8 +198,8 @@ export function EstimatePanel({ params, setParams, result }: Props) {
             <ResultItem label="所得税" value={fmt(result.incomeTax)} sub={`課税所得 ${fmt(result.incomeTaxable)}`} />
             <ResultItem label="復興特別所得税" value={fmt(result.reconstructionTax)} sub="所得税×2.1%" />
             <ResultItem label="住民税（概算）" value={fmt(result.residentTax)} sub={`課税所得 ${fmt(result.residentTaxable)}`} />
-            {((result as unknown as Record<string, unknown>).housingLoanDeduction as number) > 0 && (
-              <ResultItem label="住宅ローン控除" value={fmt((result as unknown as Record<string, unknown>).housingLoanDeduction as number)} color="green" />
+            {result.deductions.housingLoan > 0 && (
+              <ResultItem label="住宅ローン控除" value={fmt(result.deductions.housingLoan)} color="green" />
             )}
             <ResultItem label="税額合計" value={fmt(result.totalTax)} bold />
           </ResultGrid>
@@ -208,8 +208,8 @@ export function EstimatePanel({ params, setParams, result }: Props) {
         <ResultSection title="E. 納付・還付">
           <ResultGrid>
             <ResultItem label="源泉徴収済" value={fmt(result.withheld)} />
-            {((result as unknown as Record<string, unknown>).prepaidTax as number) > 0 && (
-              <ResultItem label="予定納税額" value={fmt((result as unknown as Record<string, unknown>).prepaidTax as number)} />
+            {result.advanceTaxPayment > 0 && (
+              <ResultItem label="予定納税額" value={fmt(result.advanceTaxPayment)} />
             )}
             <ResultItem
               label={result.balance > 0 ? "📌 追加納付額" : "🎉 還付予定額"}

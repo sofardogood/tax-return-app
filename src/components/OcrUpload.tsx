@@ -46,8 +46,12 @@ export function OcrUpload({ year, onSubmit }: Props) {
       fd.append("file", file);
       const res = await fetch("/api/ocr", { method: "POST", body: fd });
       if (!res.ok) throw new Error();
-      const data: OcrResult = await res.json();
-      setOcrResult(data);
+      const data = await res.json();
+      setOcrResult({
+        amount: data.parsed?.amount || 0,
+        date: data.parsed?.date || "",
+        storeName: data.parsed?.store || "",
+      });
     } catch {
       setError("OCR読み取りに失敗しました");
     } finally {
@@ -60,14 +64,16 @@ export function OcrUpload({ year, onSubmit }: Props) {
     setSaving(true);
     setError("");
     const fd = new FormData(e.currentTarget);
+    const dateStr = fd.get("date") as string;
+    const store = fd.get("storeName") as string;
+    const note = fd.get("note") as string;
     const entry = {
       id: crypto.randomUUID(),
-      date: fd.get("date") as string,
-      year: new Date(fd.get("date") as string).getFullYear(),
+      date: dateStr,
+      year: new Date(dateStr).getFullYear(),
       amount: Number(fd.get("amount")),
-      storeName: fd.get("storeName") as string,
-      note: fd.get("note") as string,
       category: fd.get("category") as string,
+      note: [store, note].filter(Boolean).join(" - "),
     };
     try {
       await onSubmit(entry);

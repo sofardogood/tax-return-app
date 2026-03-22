@@ -99,12 +99,13 @@ export function calcConsumptionTax(input: ConsumptionTaxInput): ConsumptionTaxRe
     }
   }
 
-  // 消費税額（国税分）
-  const consumptionTaxRate78 = 78 / 100; // 消費税の国税割合
-  const rawConsumptionTax = totalSalesTax - totalPurchaseTax;
-  const consumptionTax = Math.max(0, Math.floor(rawConsumptionTax * consumptionTaxRate78 / (78 / 100)));
+  // 納付消費税 = 売上消費税 - 仕入税額控除
+  const rawTax = Math.max(0, totalSalesTax - totalPurchaseTax);
+  // 国税分: 消費税10%のうち7.8%が国税、8%のうち6.24%が国税
+  // 簡易計算: rawTax * 78/100
+  const consumptionTax = Math.floor(rawTax * 78 / 100);
 
-  // 地方消費税（消費税額の22/78）
+  // 地方消費税（国税の22/78）
   const localConsumptionTax = Math.floor(consumptionTax * 22 / 78);
 
   return {

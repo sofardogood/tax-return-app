@@ -167,7 +167,7 @@ export default function Home() {
       {tab === 1 && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <OcrUpload year={year} onSubmit={entry => addEntry("receipt", entry)} />
+            <OcrUpload year={year} onSubmit={entry => addEntry("expense", entry)} />
             <ReceiptUpload year={year} onSubmit={entry => addEntry("receipt", entry)} />
           </div>
           <DataTable

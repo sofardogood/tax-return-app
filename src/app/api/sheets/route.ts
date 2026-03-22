@@ -1,10 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { loadData, appendIncome, appendExpense, appendSlip, appendReceipt, deleteRow } from "@/lib/sheets";
+import {
+  loadData, appendIncome, appendExpense, appendSlip, appendReceipt,
+  loadJournalEntries, appendJournalEntry, deleteJournalEntry,
+  loadFixedAssets, appendFixedAsset, deleteFixedAsset,
+  loadInvoices, appendInvoice, deleteInvoice,
+  loadTaxpayerInfo, appendTaxpayerInfo, deleteTaxpayerInfo,
+  deleteRow,
+} from "@/lib/sheets";
 
 export async function GET() {
   try {
-    const data = await loadData();
-    return NextResponse.json(data);
+    const [data, journal, fixedAssets, invoices, taxpayerInfo] = await Promise.all([
+      loadData(),
+      loadJournalEntries(),
+      loadFixedAssets(),
+      loadInvoices(),
+      loadTaxpayerInfo(),
+    ]);
+    return NextResponse.json({ ...data, journal, fixedAssets, invoices, taxpayerInfo });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Unknown error";
     return NextResponse.json({ error: msg }, { status: 500 });
@@ -28,6 +41,18 @@ export async function POST(request: NextRequest) {
         break;
       case "receipt":
         await appendReceipt(entry);
+        break;
+      case "journal":
+        await appendJournalEntry(entry);
+        break;
+      case "fixed_asset":
+        await appendFixedAsset(entry);
+        break;
+      case "invoice":
+        await appendInvoice(entry);
+        break;
+      case "taxpayer":
+        await appendTaxpayerInfo(entry);
         break;
       default:
         return NextResponse.json({ error: "Invalid type" }, { status: 400 });
