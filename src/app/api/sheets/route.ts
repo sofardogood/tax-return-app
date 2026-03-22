@@ -6,8 +6,19 @@ export async function GET() {
     const data = await loadData();
     return NextResponse.json(data);
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : "Unknown error";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    const err = e as { message?: string; code?: number; errors?: { message: string }[] };
+    return NextResponse.json({
+      error: err.message || "Unknown error",
+      code: err.code,
+      details: err.errors,
+      envCheck: {
+        hasJson: !!process.env.GOOGLE_SERVICE_ACCOUNT_JSON,
+        jsonLen: process.env.GOOGLE_SERVICE_ACCOUNT_JSON?.length,
+        startsWithBrace: process.env.GOOGLE_SERVICE_ACCOUNT_JSON?.startsWith("{"),
+        hasSheetId: !!process.env.GOOGLE_SPREADSHEET_ID,
+        sheetIdPrefix: process.env.GOOGLE_SPREADSHEET_ID?.substring(0, 10),
+      },
+    }, { status: 500 });
   }
 }
 
