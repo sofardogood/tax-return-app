@@ -1,11 +1,18 @@
 import { google } from "googleapis";
 
 export function getAuth() {
-  const credentials = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
-  if (!credentials) {
+  const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  if (!raw) {
     throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON environment variable is not set");
   }
-  const parsed = JSON.parse(credentials);
+  // Support both raw JSON and Base64-encoded JSON
+  let jsonStr: string;
+  try {
+    jsonStr = raw.startsWith("{") ? raw : Buffer.from(raw, "base64").toString("utf-8");
+  } catch {
+    jsonStr = raw;
+  }
+  const parsed = JSON.parse(jsonStr);
   return new google.auth.GoogleAuth({
     credentials: parsed,
     scopes: [
