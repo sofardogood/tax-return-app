@@ -58,11 +58,11 @@ export function IncomeForm({ year, onSubmit }: { year: number; onSubmit: (e: Inc
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
       <h3 className="font-bold text-slate-700 mb-3">💰 収入登録</h3>
       <form onSubmit={handleSubmit} className="space-y-3">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Input name="date" label="日付" type="date" defaultValue={today} required />
           <Input name="amount" label="支払総額（円）" type="number" min={0} required />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">区分</label>
             <select name="category" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
@@ -71,7 +71,7 @@ export function IncomeForm({ year, onSubmit }: { year: number; onSubmit: (e: Inc
           </div>
           <Input name="withheld" label="源泉徴収額" type="number" min={0} defaultValue="0" />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">消費税区分</label>
             <select name="taxType" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">

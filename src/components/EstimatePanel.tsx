@@ -17,8 +17,8 @@ export function EstimatePanel({ params, setParams, result }: Props) {
   return (
     <div className="space-y-6">
       {/* Input form */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <h3 className="font-bold text-slate-700 mb-4">🧮 控除入力</h3>
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 sm:p-6">
+        <h3 className="font-bold text-slate-700 mb-3 sm:mb-4 text-sm sm:text-base">🧮 控除入力</h3>
 
         <Section title="① 基本控除">
           <Grid>
@@ -156,8 +156,8 @@ export function EstimatePanel({ params, setParams, result }: Props) {
       </div>
 
       {/* Results */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <h3 className="font-bold text-slate-700 mb-4">📄 計算結果</h3>
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 sm:p-6">
+        <h3 className="font-bold text-slate-700 mb-3 sm:mb-4 text-sm sm:text-base">📄 計算結果</h3>
 
         <ResultSection title="A. 収入金額">
           <ResultGrid>
@@ -241,7 +241,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function Grid({ children }: { children: React.ReactNode }) {
-  return <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">{children}</div>;
+  return <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">{children}</div>;
 }
 
 function Field({ label, value, onChange, help }: {
@@ -305,7 +305,7 @@ function ResultSection({ title, children }: { title: string; children: React.Rea
 }
 
 function ResultGrid({ children }: { children: React.ReactNode }) {
-  return <div className="grid grid-cols-2 md:grid-cols-4 gap-2">{children}</div>;
+  return <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">{children}</div>;
 }
 
 function ResultItem({ label, value, sub, bold, color }: {

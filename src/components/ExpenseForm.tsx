@@ -59,7 +59,7 @@ export function ExpenseForm({ year, onSubmit }: { year: number; onSubmit: (e: Ex
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
       <h3 className="font-bold text-slate-700 mb-3">💳 経費登録</h3>
       <form onSubmit={handleSubmit} className="space-y-3">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">日付</label>
             <input name="date" type="date" defaultValue={today} required className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
@@ -77,7 +77,7 @@ export function ExpenseForm({ year, onSubmit }: { year: number; onSubmit: (e: Ex
             />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">区分</label>
             <select name="category" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
@@ -96,7 +96,7 @@ export function ExpenseForm({ year, onSubmit }: { year: number; onSubmit: (e: Ex
             </select>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="flex items-center gap-3">
             <label className="flex items-center gap-1.5 text-xs font-medium text-slate-600 cursor-pointer">
               <input

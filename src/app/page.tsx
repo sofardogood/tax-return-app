@@ -93,7 +93,7 @@ export default function Home() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 pb-20 md:pb-6">
       {error && (
         <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg">
           <p className="font-medium">⚠️ Google Sheets未接続</p>
@@ -103,12 +103,12 @@ export default function Home() {
       )}
 
       {/* Year selector */}
-      <div className="flex items-center gap-3">
-        <label className="text-sm font-medium text-slate-600">対象年:</label>
+      <div className="flex items-center gap-2 sm:gap-3">
+        <label className="text-xs sm:text-sm font-medium text-slate-600">対象年:</label>
         <select
           value={year}
           onChange={e => setYear(Number(e.target.value))}
-          className="border border-slate-300 rounded-lg px-3 py-1.5 text-sm bg-white"
+          className="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white min-h-[44px]"
         >
           {years.map(y => <option key={y} value={y}>{y}年</option>)}
         </select>
@@ -131,20 +131,20 @@ export default function Home() {
       {/* Tab 0: 収入・経費 */}
       {tab === 0 && (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <IncomeForm year={year} onSubmit={entry => addEntry("income", entry)} />
             <ExpenseForm year={year} onSubmit={entry => addEntry("expense", entry)} />
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <DataTable
               title="収入一覧"
               items={data.incomes.filter(i => i.year === year) as any[]}
               columns={[
                 { key: "date", label: "日付" },
                 { key: "category", label: "区分" },
-                { key: "amount", label: "金額", format: (v: number) => `¥${v.toLocaleString()}` },
+                { key: "amount", label: "金額", format: (v: unknown) => `¥${Number(v).toLocaleString()}` },
                 { key: "source", label: "支払者" },
-                { key: "withheld", label: "源泉", format: (v: number) => `¥${v.toLocaleString()}` },
+                { key: "withheld", label: "源泉", format: (v: unknown) => `¥${Number(v).toLocaleString()}` },
               ]}
               onDelete={id => deleteEntry("incomes", id)}
             />
@@ -154,7 +154,7 @@ export default function Home() {
               columns={[
                 { key: "date", label: "日付" },
                 { key: "category", label: "区分" },
-                { key: "amount", label: "金額", format: (v: number) => `¥${v.toLocaleString()}` },
+                { key: "amount", label: "金額", format: (v: unknown) => `¥${Number(v).toLocaleString()}` },
                 { key: "note", label: "メモ" },
               ]}
               onDelete={id => deleteEntry("expenses", id)}
@@ -166,7 +166,7 @@ export default function Home() {
       {/* Tab 1: 領収書・OCR */}
       {tab === 1 && (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <OcrUpload year={year} onSubmit={entry => addEntry("expense", entry)} />
             <ReceiptUpload year={year} onSubmit={entry => addEntry("receipt", entry)} />
           </div>
@@ -176,7 +176,7 @@ export default function Home() {
             columns={[
               { key: "date", label: "日付" },
               { key: "category", label: "区分" },
-              { key: "amount", label: "金額", format: (v: number) => `¥${v.toLocaleString()}` },
+              { key: "amount", label: "金額", format: (v: unknown) => `¥${Number(v).toLocaleString()}` },
               { key: "fileName", label: "ファイル名" },
               { key: "note", label: "メモ" },
             ]}
@@ -218,7 +218,7 @@ export default function Home() {
             <p className="text-slate-500">データがありません。収入・経費を登録してください。</p>
           ) : (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
                 <Stat label="総収入" value={result.totalIncome} />
                 <Stat label="総経費" value={result.totalExpenses} />
                 <Stat label="概算税額" value={result.totalTax} />
@@ -226,7 +226,7 @@ export default function Home() {
               </div>
               <div>
                 <h3 className="font-semibold text-sm text-slate-600 mb-2">所得内訳</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
                   {[
                     ["給与", result.salary], ["事業", result.business], ["配当", result.dividend],
                     ["不動産", result.realEstate], ["譲渡", result.capitalGains],

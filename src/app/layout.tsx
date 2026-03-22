@@ -30,7 +30,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="bg-slate-50 text-slate-900 min-h-screen">
         <SessionProvider session={session}>
           <Header />
-          <main className="max-w-7xl mx-auto px-4 py-6">{children}</main>
+          <main className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-6">{children}</main>
           <footer className="text-center text-xs text-slate-400 py-4 border-t border-slate-200">
             ⚠ 本ツールは概算です。最終判断は税務署・税理士にご相談ください。
           </footer>
