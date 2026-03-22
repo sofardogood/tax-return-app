@@ -1,8 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { loadData, appendIncome, appendExpense, appendSlip, appendReceipt, deleteRow } from "@/lib/sheets";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const debug = new URL(request.url).searchParams.get("debug") === "1";
   try {
+    if (debug) {
+      const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON || "";
+      let decoded: string;
+      try {
+        decoded = raw.startsWith("{") ? raw : Buffer.from(raw, "base64").toString("utf-8");
+      } catch { decoded = "decode_failed"; }
+      let parsed: Record<string, unknown> = {};
+      try { parsed = JSON.parse(decoded); } catch { /* */ }
+      return NextResponse.json({
+        rawLen: raw.length,
+        rawFirst10: raw.substring(0, 10),
+        decodedLen: decoded.length,
+        decodedFirst10: decoded.substring(0, 10),
+        projectId: parsed.project_id,
+        clientEmail: parsed.client_email,
+        sheetId: process.env.GOOGLE_SPREADSHEET_ID,
+      });
+    }
     const data = await loadData();
     return NextResponse.json(data);
   } catch (e: unknown) {
@@ -11,13 +30,6 @@ export async function GET() {
       error: err.message || "Unknown error",
       code: err.code,
       details: err.errors,
-      envCheck: {
-        hasJson: !!process.env.GOOGLE_SERVICE_ACCOUNT_JSON,
-        jsonLen: process.env.GOOGLE_SERVICE_ACCOUNT_JSON?.length,
-        startsWithBrace: process.env.GOOGLE_SERVICE_ACCOUNT_JSON?.startsWith("{"),
-        hasSheetId: !!process.env.GOOGLE_SPREADSHEET_ID,
-        sheetIdPrefix: process.env.GOOGLE_SPREADSHEET_ID?.substring(0, 10),
-      },
     }, { status: 500 });
   }
 }
