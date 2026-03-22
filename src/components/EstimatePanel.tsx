@@ -9,7 +9,7 @@ interface Props {
 }
 
 export function EstimatePanel({ params, setParams, result }: Props) {
-  const set = (key: keyof EstimateParams, value: number) =>
+  const set = (key: keyof EstimateParams, value: number | string) =>
     setParams({ ...params, [key]: value });
 
   const fmt = (n: number) => `¥${n.toLocaleString()}`;
@@ -54,6 +54,105 @@ export function EstimatePanel({ params, setParams, result }: Props) {
             <Field label="配偶者の年収（-1=なし）" value={params.spouseIncome} onChange={v => set("spouseIncome", v)} />
           </Grid>
         </Section>
+
+        <Section title="⑥ 追加控除">
+          <Grid>
+            <SelectField
+              label="障害者控除"
+              value={(params as unknown as Record<string, unknown>).disabilityType as string || "none"}
+              onChange={v => set("disabilityType" as keyof EstimateParams, v)}
+              options={[
+                { label: "なし", value: "none" },
+                { label: "一般障害者", value: "general" },
+                { label: "特別障害者", value: "special" },
+                { label: "同居特別障害者", value: "cohabiting_special" },
+              ]}
+            />
+            <SelectField
+              label="寡婦/ひとり親控除"
+              value={(params as unknown as Record<string, unknown>).widowType as string || "none"}
+              onChange={v => set("widowType" as keyof EstimateParams, v)}
+              options={[
+                { label: "なし", value: "none" },
+                { label: "寡婦", value: "widow" },
+                { label: "ひとり親", value: "single_parent" },
+              ]}
+            />
+            <CheckboxField
+              label="勤労学生控除"
+              checked={!!(params as unknown as Record<string, unknown>).workingStudent}
+              onChange={v => set("workingStudent" as keyof EstimateParams, v ? 1 : 0)}
+            />
+          </Grid>
+        </Section>
+
+        <Section title="⑦ 住宅ローン控除">
+          <Grid>
+            <Field
+              label="住宅ローン残高"
+              value={(params as unknown as Record<string, unknown>).housingLoanBalance as number || 0}
+              onChange={v => set("housingLoanBalance" as keyof EstimateParams, v)}
+            />
+            <CheckboxField
+              label="初年度"
+              checked={!!(params as unknown as Record<string, unknown>).housingLoanFirstYear}
+              onChange={v => set("housingLoanFirstYear" as keyof EstimateParams, v ? 1 : 0)}
+            />
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1">取得日</label>
+              <input
+                type="date"
+                value={(params as unknown as Record<string, unknown>).housingLoanDate as string || ""}
+                onChange={e => set("housingLoanDate" as keyof EstimateParams, e.target.value)}
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-300 outline-none"
+              />
+            </div>
+          </Grid>
+        </Section>
+
+        <Section title="⑧ その他">
+          <Grid>
+            <Field
+              label="寄附金控除（ふるさと納税以外）"
+              value={(params as unknown as Record<string, unknown>).otherDonations as number || 0}
+              onChange={v => set("otherDonations" as keyof EstimateParams, v)}
+            />
+            <Field
+              label="雑損控除（損失額）"
+              value={(params as unknown as Record<string, unknown>).casualtyLoss as number || 0}
+              onChange={v => set("casualtyLoss" as keyof EstimateParams, v)}
+            />
+            <Field
+              label="雑損控除（保険金）"
+              value={(params as unknown as Record<string, unknown>).casualtyInsurance as number || 0}
+              onChange={v => set("casualtyInsurance" as keyof EstimateParams, v)}
+            />
+            <Field
+              label="セルフメディケーション"
+              value={(params as unknown as Record<string, unknown>).selfMedication as number || 0}
+              onChange={v => set("selfMedication" as keyof EstimateParams, v)}
+              help="12,000円超が対象"
+            />
+            <Field
+              label="予定納税額"
+              value={(params as unknown as Record<string, unknown>).prepaidTax as number || 0}
+              onChange={v => set("prepaidTax" as keyof EstimateParams, v)}
+            />
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1">
+                家事按分割合: {(params as unknown as Record<string, unknown>).homeOfficeRatio as number || 0}%
+              </label>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={(params as unknown as Record<string, unknown>).homeOfficeRatio as number || 0}
+                onChange={e => set("homeOfficeRatio" as keyof EstimateParams, Number(e.target.value))}
+                className="w-full"
+              />
+            </div>
+          </Grid>
+        </Section>
       </div>
 
       {/* Results */}
@@ -85,6 +184,8 @@ export function EstimatePanel({ params, setParams, result }: Props) {
                   social: "社会保険料", medical: "医療費", furusato: "寄附金",
                   lifeIns: "生命保険料", earthquake: "地震保険料", spouse: "配偶者",
                   dependent: "扶養", ideco: "iDeCo", blue: "青色申告", basic: "基礎控除",
+                  disability: "障害者", widow: "寡婦/ひとり親", workingStudent: "勤労学生",
+                  otherDonations: "寄附金(その他)", casualty: "雑損", selfMedication: "セルフメディケーション",
                 };
                 return <ResultItem key={k} label={labels[k] || k} value={fmt(v as number)} />;
               })}
@@ -97,6 +198,9 @@ export function EstimatePanel({ params, setParams, result }: Props) {
             <ResultItem label="所得税" value={fmt(result.incomeTax)} sub={`課税所得 ${fmt(result.incomeTaxable)}`} />
             <ResultItem label="復興特別所得税" value={fmt(result.reconstructionTax)} sub="所得税×2.1%" />
             <ResultItem label="住民税（概算）" value={fmt(result.residentTax)} sub={`課税所得 ${fmt(result.residentTaxable)}`} />
+            {((result as unknown as Record<string, unknown>).housingLoanDeduction as number) > 0 && (
+              <ResultItem label="住宅ローン控除" value={fmt((result as unknown as Record<string, unknown>).housingLoanDeduction as number)} color="green" />
+            )}
             <ResultItem label="税額合計" value={fmt(result.totalTax)} bold />
           </ResultGrid>
         </ResultSection>
@@ -104,6 +208,9 @@ export function EstimatePanel({ params, setParams, result }: Props) {
         <ResultSection title="E. 納付・還付">
           <ResultGrid>
             <ResultItem label="源泉徴収済" value={fmt(result.withheld)} />
+            {((result as unknown as Record<string, unknown>).prepaidTax as number) > 0 && (
+              <ResultItem label="予定納税額" value={fmt((result as unknown as Record<string, unknown>).prepaidTax as number)} />
+            )}
             <ResultItem
               label={result.balance > 0 ? "📌 追加納付額" : "🎉 還付予定額"}
               value={fmt(Math.abs(result.balance))}
@@ -150,6 +257,40 @@ function Field({ label, value, onChange, help }: {
         className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-300 outline-none"
       />
       {help && <p className="text-xs text-slate-400 mt-0.5">{help}</p>}
+    </div>
+  );
+}
+
+function SelectField({ label, value, onChange, options }: {
+  label: string; value: string; onChange: (v: string) => void;
+  options: { label: string; value: string }[];
+}) {
+  return (
+    <div>
+      <label className="block text-xs font-medium text-slate-500 mb-1">{label}</label>
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-300 outline-none"
+      >
+        {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+    </div>
+  );
+}
+
+function CheckboxField({ label, checked, onChange }: {
+  label: string; checked: boolean; onChange: (v: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2 pt-5">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={e => onChange(e.target.checked)}
+        className="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-300"
+      />
+      <label className="text-xs font-medium text-slate-500">{label}</label>
     </div>
   );
 }

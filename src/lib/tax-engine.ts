@@ -134,6 +134,54 @@ export function calcDependentDeduction(ages: number[]): number {
   return total;
 }
 
+/** 障害者控除 */
+export function calcDisabilityDeduction(level: "general" | "special" | "cohabiting_special"): number {
+  if (level === "cohabiting_special") return 750_000;
+  if (level === "special") return 400_000;
+  return 270_000; // general
+}
+
+/** 寡婦控除・ひとり親控除 */
+export function calcWidowDeduction(type: "widow" | "single_parent"): number {
+  return type === "single_parent" ? 350_000 : 270_000;
+}
+
+/** 勤労学生控除 */
+export function calcStudentDeduction(): number {
+  return 270_000;
+}
+
+/** 住宅ローン控除 */
+export function calcHousingLoanDeduction(loanBalance: number, isFirstYear: boolean, acquisitionDate: string): number {
+  if (loanBalance <= 0) return 0;
+  const acqYear = new Date(acquisitionDate).getFullYear();
+  // 2024年以降の新築は0.7%、上限3000万円
+  const maxBalance = acqYear >= 2024 ? 30_000_000 : 40_000_000;
+  const rate = 0.007;
+  const capped = Math.min(loanBalance, maxBalance);
+  return Math.floor(capped * rate);
+}
+
+/** 寄附金控除（ふるさと納税以外） */
+export function calcOtherDonationDeduction(donations: number): number {
+  return Math.max(0, donations - 2_000);
+}
+
+/** 雑損控除 */
+export function calcCasualtyDeduction(loss: number, insurance: number, income: number): number {
+  if (loss <= 0) return 0;
+  const netLoss = Math.max(0, loss - insurance);
+  const a = Math.max(0, netLoss - Math.floor(income * 0.1));
+  const b = Math.max(0, netLoss - 50_000);
+  return Math.max(a, b);
+}
+
+/** セルフメディケーション税制 */
+export function calcSelfMedicationDeduction(total: number): number {
+  if (total <= 12_000) return 0;
+  return Math.min(total - 12_000, 88_000);
+}
+
 /** 退職所得の分離課税 */
 export function calcRetirementTax(income: number, yearsOfService: number) {
   if (income <= 0 || yearsOfService <= 0) return { deduction: 0, taxable: 0, tax: 0, reconstruction: 0, total: 0 };
@@ -202,6 +250,17 @@ export interface TaxData {
   receipts: ReceiptEntry[];
 }
 
+export interface TaxpayerInfo {
+  name: string;
+  address: string;
+  myNumber: string;
+  occupation: string;
+  birthDate: string;
+  phone: string;
+  email: string;
+  year: number;
+}
+
 export interface EstimateParams {
   year: number;
   socialInsurance: number;
@@ -221,6 +280,19 @@ export interface EstimateParams {
   spouseIncome: number; // -1 = no spouse
   dependentAges: number[];
   ideco: number;
+  // Extended fields
+  disabilityLevel: "none" | "general" | "special" | "cohabiting_special";
+  widowType: "none" | "widow" | "single_parent";
+  isStudent: boolean;
+  housingLoanBalance: number;
+  housingLoanFirstYear: boolean;
+  housingLoanAcquisitionDate: string;
+  otherDonations: number;
+  casualtyLoss: number;
+  casualtyInsurance: number;
+  selfMedicationTotal: number;
+  advanceTaxPayment: number;
+  homeOfficeRatio: number; // 0-100
 }
 
 /** メイン概算計算 */
@@ -257,11 +329,35 @@ export function estimateTax(params: EstimateParams, data: TaxData) {
   const dependentDed = calcDependentDeduction(params.dependentAges);
   const idecoDed = Math.max(0, params.ideco);
 
+  // New deductions
+  const disabilityDed = params.disabilityLevel && params.disabilityLevel !== "none"
+    ? calcDisabilityDeduction(params.disabilityLevel) : 0;
+  const widowDed = params.widowType && params.widowType !== "none"
+    ? calcWidowDeduction(params.widowType) : 0;
+  const studentDed = params.isStudent ? calcStudentDeduction() : 0;
+  const otherDonationDed = params.otherDonations > 0
+    ? calcOtherDonationDeduction(params.otherDonations) : 0;
+  const casualtyDed = params.casualtyLoss > 0
+    ? calcCasualtyDeduction(params.casualtyLoss, params.casualtyInsurance || 0, totalIncome) : 0;
+  const selfMedDed = params.selfMedicationTotal > 0 && medicalDed === 0
+    ? calcSelfMedicationDeduction(params.selfMedicationTotal) : 0;
+
   const allDeductions = params.socialInsurance + medicalDed + furusatoDed + lifeInsDed
-    + earthquakeDed + spouseDed + dependentDed + idecoDed;
+    + earthquakeDed + spouseDed + dependentDed + idecoDed
+    + disabilityDed + widowDed + studentDed + otherDonationDed + casualtyDed + selfMedDed;
 
   const incomeTaxable = Math.max(0, totalIncome - allDeductions - params.basicDeduction);
-  const incomeTax = Math.max(0, calcIncomeTax(incomeTaxable));
+  const rawIncomeTax = Math.max(0, calcIncomeTax(incomeTaxable));
+
+  // Housing loan deduction (tax credit, applied after tax calculation)
+  const housingLoanDed = params.housingLoanBalance > 0
+    ? calcHousingLoanDeduction(
+        params.housingLoanBalance,
+        params.housingLoanFirstYear || false,
+        params.housingLoanAcquisitionDate || "",
+      )
+    : 0;
+  const incomeTax = Math.max(0, rawIncomeTax - housingLoanDed);
   const reconstructionTax = calcReconstructionTax(incomeTax);
 
   const residentTaxable = Math.max(0, totalIncome - allDeductions - params.residentBasicDeduction);
@@ -278,8 +374,9 @@ export function estimateTax(params: EstimateParams, data: TaxData) {
 
   const furusatoLimit = calcFurusatoLimit(incomeTaxable, params.residentRate);
 
+  const advanceTaxPayment = Math.max(0, params.advanceTaxPayment || 0);
   const totalTax = incomeTax + reconstructionTax + residentTax + (retirementResult?.total || 0);
-  const balance = totalTax - withheld;
+  const balance = totalTax - withheld - advanceTaxPayment;
 
   return {
     salary, business, other, dividend, realEstate, capitalGains, occasional, miscellaneous,
@@ -290,13 +387,17 @@ export function estimateTax(params: EstimateParams, data: TaxData) {
       lifeIns: lifeInsDed, earthquake: earthquakeDed, spouse: spouseDed,
       dependent: dependentDed, ideco: idecoDed, blue: params.blueDeduction,
       basic: params.basicDeduction, total: allDeductions + params.basicDeduction,
+      disability: disabilityDed, widow: widowDed, student: studentDed,
+      otherDonation: otherDonationDed, casualty: casualtyDed,
+      selfMedication: selfMedDed, housingLoan: housingLoanDed,
     },
     incomeTaxable, incomeTax, reconstructionTax,
     residentTaxable, residentTax,
     retirementResult, furusatoLimit,
-    totalTax, balance,
+    totalTax, balance, advanceTaxPayment,
     incomeCount: yearIncomes.length,
     expenseCount: yearExpenses.length,
     effectiveRate: totalIncome > 0 ? totalTax / totalIncome : 0,
+    homeOfficeRatio: params.homeOfficeRatio || 0,
   };
 }

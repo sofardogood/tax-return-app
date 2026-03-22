@@ -1,0 +1,10 @@
+{
+  "name": "確定申告メモ",
+  "short_name": "税メモ",
+  "description": "収入・経費・領収書を管理して概算税額を確認",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0ea5e9",
+  "icons": []
+}

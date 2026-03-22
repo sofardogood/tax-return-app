@@ -15,8 +15,17 @@ const CATEGORIES: { label: string; value: IncomeCategory }[] = [
   { label: "その他", value: "other" },
 ];
 
+const TAX_TYPES = [
+  { label: "課税10%", value: "taxable_10" },
+  { label: "課税8%（軽減）", value: "taxable_8" },
+  { label: "非課税", value: "exempt" },
+  { label: "免税", value: "tax_free" },
+  { label: "輸出免税", value: "export_exempt" },
+];
+
 export function IncomeForm({ year, onSubmit }: { year: number; onSubmit: (e: IncomeEntry) => Promise<void> }) {
   const [saving, setSaving] = useState(false);
+  const [needsApportionment, setNeedsApportionment] = useState(false);
   const today = new Date().toISOString().split("T")[0];
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -37,6 +46,7 @@ export function IncomeForm({ year, onSubmit }: { year: number; onSubmit: (e: Inc
     try {
       await onSubmit(entry);
       e.currentTarget.reset();
+      setNeedsApportionment(false);
     } catch {
       alert("保存に失敗しました");
     } finally {
@@ -61,6 +71,29 @@ export function IncomeForm({ year, onSubmit }: { year: number; onSubmit: (e: Inc
           </div>
           <Input name="withheld" label="源泉徴収額" type="number" min={0} defaultValue="0" />
         </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">消費税区分</label>
+            <select name="taxType" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+              {TAX_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+          </div>
+          <div className="flex items-end gap-2">
+            <div className="flex items-center gap-2 pb-2">
+              <input
+                type="checkbox"
+                id="needsApportionment"
+                checked={needsApportionment}
+                onChange={e => setNeedsApportionment(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-300"
+              />
+              <label htmlFor="needsApportionment" className="text-xs font-medium text-slate-600">家事按分あり</label>
+            </div>
+          </div>
+        </div>
+        {needsApportionment && (
+          <Input name="apportionmentRatio" label="事業使用割合（%）" type="number" min={0} max={100} defaultValue="100" />
+        )}
         <Input name="source" label="支払者・案件名" />
         <Input name="note" label="メモ" />
         <button

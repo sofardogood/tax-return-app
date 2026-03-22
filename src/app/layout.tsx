@@ -1,9 +1,23 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#0ea5e9",
+};
 
 export const metadata: Metadata = {
   title: "確定申告メモ",
   description: "収入・経費・領収書を管理して概算税額を確認",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "確定申告メモ",
+  },
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

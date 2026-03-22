@@ -10,6 +10,12 @@ import { ReceiptUpload } from "@/components/ReceiptUpload";
 import { EstimatePanel } from "@/components/EstimatePanel";
 import { DataTable } from "@/components/DataTable";
 import { TabNav } from "@/components/TabNav";
+import { BookkeepingTab } from "@/components/BookkeepingTab";
+import { DepreciationTab } from "@/components/DepreciationTab";
+import { ConsumptionTaxTab } from "@/components/ConsumptionTaxTab";
+import { TaxReturnPdf } from "@/components/TaxReturnPdf";
+import { OcrUpload } from "@/components/OcrUpload";
+import { HelpGuide } from "@/components/HelpGuide";
 
 const BLANK_DATA: TaxData = { incomes: [], expenses: [], withholding_slips: [], receipts: [] };
 
@@ -21,6 +27,10 @@ const DEFAULT_PARAMS: EstimateParams = {
   medicalTotal: 0, medicalReimbursement: 0, furusatoDonations: 0,
   lifeInsGeneral: 0, lifeInsMedical: 0, lifeInsPension: 0,
   earthquakeInsurance: 0, spouseIncome: -1, dependentAges: [], ideco: 0,
+  disabilityLevel: "none", widowType: "none", isStudent: false,
+  housingLoanBalance: 0, housingLoanFirstYear: false, housingLoanAcquisitionDate: "",
+  otherDonations: 0, casualtyLoss: 0, casualtyInsurance: 0,
+  selfMedicationTotal: 0, advanceTaxPayment: 0, homeOfficeRatio: 0,
 };
 
 export default function Home() {
@@ -109,12 +119,16 @@ export default function Home() {
 
       {/* Tabs */}
       <TabNav
-        tabs={["📝 収入・経費", "🧾 領収書・書類", "🧮 概算計算", "📊 レポート"]}
+        tabs={[
+          "収入・経費", "領収書・OCR", "帳簿・仕訳",
+          "減価償却", "消費税", "概算計算",
+          "申告書PDF", "レポート", "ヘルプ",
+        ]}
         active={tab}
         onChange={setTab}
       />
 
-      {/* Tab content */}
+      {/* Tab 0: 収入・経費 */}
       {tab === 0 && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -149,9 +163,13 @@ export default function Home() {
         </div>
       )}
 
+      {/* Tab 1: 領収書・OCR */}
       {tab === 1 && (
         <div className="space-y-6">
-          <ReceiptUpload year={year} onSubmit={entry => addEntry("receipt", entry)} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <OcrUpload year={year} onSubmit={entry => addEntry("receipt", entry)} />
+            <ReceiptUpload year={year} onSubmit={entry => addEntry("receipt", entry)} />
+          </div>
           <DataTable
             title="領収書・書類一覧"
             items={data.receipts.filter(r => r.year === year) as any[]}
@@ -167,13 +185,35 @@ export default function Home() {
         </div>
       )}
 
+      {/* Tab 2: 帳簿・仕訳 */}
       {tab === 2 && (
+        <BookkeepingTab year={year} data={data} onRefresh={fetchData} />
+      )}
+
+      {/* Tab 3: 減価償却 */}
+      {tab === 3 && (
+        <DepreciationTab year={year} data={data} onRefresh={fetchData} />
+      )}
+
+      {/* Tab 4: 消費税 */}
+      {tab === 4 && (
+        <ConsumptionTaxTab year={year} />
+      )}
+
+      {/* Tab 5: 概算計算 */}
+      {tab === 5 && (
         <EstimatePanel params={params} setParams={setParams} result={result} />
       )}
 
-      {tab === 3 && (
+      {/* Tab 6: 申告書PDF */}
+      {tab === 6 && (
+        <TaxReturnPdf year={year} result={result} data={data} />
+      )}
+
+      {/* Tab 7: レポート */}
+      {tab === 7 && (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h2 className="text-lg font-bold mb-4">📊 {year}年 年次レポート</h2>
+          <h2 className="text-lg font-bold mb-4">{year}年 年次レポート</h2>
           {result.incomeCount === 0 && result.expenseCount === 0 ? (
             <p className="text-slate-500">データがありません。収入・経費を登録してください。</p>
           ) : (
@@ -203,6 +243,9 @@ export default function Home() {
           )}
         </div>
       )}
+
+      {/* Tab 8: ヘルプ */}
+      {tab === 8 && <HelpGuide />}
     </div>
   );
 }
