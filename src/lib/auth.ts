@@ -14,6 +14,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ profile }) {
       return ALLOWED_EMAILS.includes(profile?.email || "");
     },
+    async authorized({ auth, request }) {
+      const isLoggedIn = !!auth?.user;
+      const isLoginPage = request.nextUrl.pathname.startsWith("/login");
+      const isAuthApi = request.nextUrl.pathname.startsWith("/api/auth");
+
+      if (isAuthApi) return true;
+      if (isLoginPage) return true;
+      if (!isLoggedIn) return false; // redirects to signIn page
+      return true;
+    },
     async session({ session }) {
       return session;
     },
