@@ -1,36 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { loadData, appendIncome, appendExpense, appendSlip, appendReceipt, deleteRow } from "@/lib/sheets";
 
-export async function GET(request: NextRequest) {
-  const debug = new URL(request.url).searchParams.get("debug") === "1";
+export async function GET() {
   try {
-    if (debug) {
-      const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON || "";
-      let decoded: string;
-      try {
-        decoded = raw.startsWith("{") ? raw : Buffer.from(raw, "base64").toString("utf-8");
-      } catch { decoded = "decode_failed"; }
-      let parsed: Record<string, unknown> = {};
-      try { parsed = JSON.parse(decoded); } catch { /* */ }
-      return NextResponse.json({
-        rawLen: raw.length,
-        rawFirst10: raw.substring(0, 10),
-        decodedLen: decoded.length,
-        decodedFirst10: decoded.substring(0, 10),
-        projectId: parsed.project_id,
-        clientEmail: parsed.client_email,
-        sheetId: process.env.GOOGLE_SPREADSHEET_ID,
-      });
-    }
     const data = await loadData();
     return NextResponse.json(data);
   } catch (e: unknown) {
-    const err = e as { message?: string; code?: number; errors?: { message: string }[] };
-    return NextResponse.json({
-      error: err.message || "Unknown error",
-      code: err.code,
-      details: err.errors,
-    }, { status: 500 });
+    const msg = e instanceof Error ? e.message : "Unknown error";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
